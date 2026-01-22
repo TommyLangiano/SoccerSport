@@ -1,12 +1,8 @@
-// controllers/authController.js
-// Logica per autenticazione: registrazione, login, dati utente
-
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const RefreshToken = require("../models/RefreshToken");
 
-// Registrazione nuovo utente
 exports.register = async (req, res) => {
   try {
     const { username, email, password, ruolo } = req.body;
@@ -26,21 +22,18 @@ exports.register = async (req, res) => {
       ruolo: ruolo || "user",
     });
 
-    // Genera access token (breve durata - 15 minuti)
     const accessToken = jwt.sign(
       { id: nuovoUtente._id },
       process.env.JWT_SECRET,
       { expiresIn: "15m" },
     );
 
-    // Genera refresh token (lunga durata - 7 giorni)
     const refreshToken = jwt.sign(
       { id: nuovoUtente._id },
       process.env.JWT_REFRESH,
       { expiresIn: "7d" },
     );
 
-    // Salva refresh token nel database
     await RefreshToken.create({
       token: refreshToken,
       userId: nuovoUtente._id,
@@ -64,7 +57,6 @@ exports.register = async (req, res) => {
   }
 };
 
-// Login utente
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -82,21 +74,18 @@ exports.login = async (req, res) => {
       return res.status(401).json({ message: "Credenziali non valide" });
     }
 
-    // Genera access token (breve durata - 15 minuti)
     const accessToken = jwt.sign(
       { id: utenteTrovato._id },
       process.env.JWT_SECRET,
       { expiresIn: "15m" },
     );
 
-    // Genera refresh token (lunga durata - 7 giorni)
     const refreshToken = jwt.sign(
       { id: utenteTrovato._id },
       process.env.JWT_REFRESH,
       { expiresIn: "7d" },
     );
 
-    // Salva refresh token nel database
     await RefreshToken.create({
       token: refreshToken,
       userId: utenteTrovato._id,
@@ -120,7 +109,6 @@ exports.login = async (req, res) => {
   }
 };
 
-// Ottieni dati utente loggato
 exports.getMe = async (req, res) => {
   try {
     res.status(200).json({
@@ -136,7 +124,6 @@ exports.getMe = async (req, res) => {
   }
 };
 
-// Refresh token - rinnova access token usando refresh token
 exports.refresh = async (req, res) => {
   try {
     const { refreshToken } = req.body;
@@ -145,33 +132,27 @@ exports.refresh = async (req, res) => {
       return res.status(401).json({ message: "Refresh token mancante" });
     }
 
-    // Verifica che il refresh token esista nel database
     const tokenDoc = await RefreshToken.findOne({ token: refreshToken });
     if (!tokenDoc) {
       return res.status(401).json({ message: "Refresh token non valido" });
     }
 
-    // Verifica che il token JWT sia valido
     const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH);
 
-    // Genera nuovo access token
     const nuovoAccessToken = jwt.sign(
       { id: decoded.id },
       process.env.JWT_SECRET,
       { expiresIn: "15m" },
     );
 
-    // Genera nuovo refresh token (rotazione)
     const nuovoRefreshToken = jwt.sign(
       { id: decoded.id },
       process.env.JWT_REFRESH,
       { expiresIn: "7d" },
     );
 
-    // Elimina il vecchio refresh token
     await RefreshToken.deleteOne({ token: refreshToken });
 
-    // Salva il nuovo refresh token
     await RefreshToken.create({
       token: nuovoRefreshToken,
       userId: decoded.id,
@@ -186,13 +167,11 @@ exports.refresh = async (req, res) => {
   }
 };
 
-// Logout - rimuove refresh token dal database
 exports.logout = async (req, res) => {
   try {
     const { refreshToken } = req.body;
 
     if (refreshToken) {
-      // Rimuovi refresh token dal database
       await RefreshToken.deleteOne({ token: refreshToken });
     }
 

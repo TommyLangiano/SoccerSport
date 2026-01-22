@@ -93,7 +93,8 @@ function CampoDetail({ currentUser, onLikeCampo, onDeleteCampo }) {
             className="img-fluid rounded mb-3"
             style={{ width: "100%", maxHeight: "400px", objectFit: "cover" }}
             onError={(e) => {
-              e.target.src = 'https://www.sporteimpianti.it/wp-content/uploads/2022/03/futsal-banner-mast-pero.jpg';
+              e.target.src =
+                "https://www.sporteimpianti.it/wp-content/uploads/2022/03/futsal-banner-mast-pero.jpg";
             }}
           />
 

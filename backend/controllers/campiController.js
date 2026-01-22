@@ -1,11 +1,7 @@
-// controllers/campiController.js
-// Logica per gestione campi da calcio: CRUD + like
-
 const Campo = require('../models/Campo');
 
 const DEFAULT_IMAGE = 'https://www.sporteimpianti.it/wp-content/uploads/2022/03/futsal-banner-mast-pero.jpg';
 
-// Ottieni tutti i campi
 exports.getAllCampi = async (req, res) => {
   try {
     const campi = await Campo.find()
@@ -21,7 +17,6 @@ exports.getAllCampi = async (req, res) => {
   }
 };
 
-// Ottieni un singolo campo per ID
 exports.getCampoById = async (req, res) => {
   try {
     const campoTrovato = await Campo.findById(req.params.id)
@@ -41,7 +36,6 @@ exports.getCampoById = async (req, res) => {
   }
 };
 
-// Crea un nuovo campo
 exports.createCampo = async (req, res) => {
   try {
     if (req.user.ruolo !== 'gestore') {
@@ -83,7 +77,6 @@ exports.createCampo = async (req, res) => {
   }
 };
 
-// Aggiorna un campo
 exports.updateCampo = async (req, res) => {
   try {
     const campoTrovato = await Campo.findById(req.params.id);
@@ -121,7 +114,6 @@ exports.updateCampo = async (req, res) => {
   }
 };
 
-// Elimina un campo
 exports.deleteCampo = async (req, res) => {
   try {
     const campoTrovato = await Campo.findById(req.params.id);
@@ -145,7 +137,6 @@ exports.deleteCampo = async (req, res) => {
   }
 };
 
-// Metti o togli like a un campo
 exports.likeCampo = async (req, res) => {
   try {
     const campoTrovato = await Campo.findById(req.params.id);

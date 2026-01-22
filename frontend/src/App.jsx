@@ -1,4 +1,3 @@
-// Import delle librerie necessarie
 import React, { useState, useEffect } from "react";
 import {
   BrowserRouter as Router,
@@ -16,17 +15,12 @@ import AddCampo from "./pages/AddCampo.jsx";
 import EditCampo from "./pages/EditCampo.jsx";
 import Profilo from "./pages/Profilo.jsx";
 
-// URL base dell'API, preso dalle variabili d'ambiente
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
-// App è il componente principale dell'applicazione
 function App() {
-  // Hook useState per gestire lo stato dell'utente loggato
   const [currentUser, setCurrentUser] = useState(null);
-  // Stato per loading
   const [loading, setLoading] = useState(true);
 
-  // useEffect per controllare lo stato di login al mount
   useEffect(() => {
     const loadInitialData = async () => {
       const storedUser = localStorage.getItem("user");
@@ -38,16 +32,13 @@ function App() {
         }
       } catch (e) {
         console.error("Errore durante il caricamento dei dati iniziali:", e);
-        // Se errore, pulisci localStorage
         handleLogout(false);
       } finally {
         setLoading(false);
       }
     };
     loadInitialData();
-  }, []); // Array di dipendenze vuoto: esegui solo al mount
-
-  // Login
+  }, []);
   const handleLogin = async (credentials) => {
     try {
       const response = await fetch(`${API_BASE_URL}/auth/login`, {
@@ -74,7 +65,6 @@ function App() {
     }
   };
 
-  // Register
   const handleRegister = async (userData) => {
     try {
       const response = await fetch(`${API_BASE_URL}/auth/register`, {
@@ -103,7 +93,6 @@ function App() {
     }
   };
 
-  // Refresh token - rinnova access token
   const handleRefreshToken = async () => {
     try {
       const refreshToken = localStorage.getItem("refreshToken");
@@ -122,14 +111,12 @@ function App() {
       if (response.ok) {
         const data = await response.json();
         localStorage.setItem("token", data.token);
-        // Aggiorna anche il refresh token se ruotato
         if (data.refreshToken) {
           localStorage.setItem("refreshToken", data.refreshToken);
         }
         return true;
       }
 
-      // Se refresh fallisce, fai logout
       handleLogout();
       return false;
     } catch (error) {
@@ -138,11 +125,9 @@ function App() {
     }
   };
 
-  // Logout
   const handleLogout = async (callApi = true) => {
     const refreshToken = localStorage.getItem("refreshToken");
 
-    // Chiama API logout per rimuovere refresh token dal DB
     if (callApi && refreshToken) {
       try {
         await fetch(`${API_BASE_URL}/auth/logout`, {
@@ -150,9 +135,7 @@ function App() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ refreshToken }),
         });
-      } catch (error) {
-        // Ignora errori del logout
-      }
+      } catch (error) {}
     }
 
     localStorage.removeItem("token");
@@ -161,12 +144,8 @@ function App() {
     setCurrentUser(null);
   };
 
-  // Crea nuovo campo (solo gestore)
-  const handleCampoCreated = () => {
-    // Il campo verrà mostrato quando l'utente torna alla home
-  };
+  const handleCampoCreated = () => {};
 
-  // Elimina campo (solo proprietario)
   const handleDeleteCampo = async (campoId) => {
     if (!window.confirm("Sei sicuro di voler eliminare questo campo?")) return;
 
@@ -191,7 +170,6 @@ function App() {
     }
   };
 
-  // Modifica campo (solo proprietario)
   const handleUpdateCampo = async (campoId, campoData) => {
     try {
       const token = localStorage.getItem("token");
@@ -216,7 +194,6 @@ function App() {
     }
   };
 
-  // Like/Unlike campo
   const handleLikeCampo = async (campoId) => {
     try {
       const token = localStorage.getItem("token");
@@ -225,11 +202,9 @@ function App() {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      // Se token scaduto (401), prova a fare refresh
       if (response.status === 401) {
         const refreshed = await handleRefreshToken();
         if (refreshed) {
-          // Riprova la chiamata con nuovo token
           return handleLikeCampo(campoId);
         }
         return { success: false, message: "Sessione scaduta" };
@@ -264,7 +239,6 @@ function App() {
         <Navbar user={currentUser} onLogout={handleLogout} />
 
         <Routes>
-          {/* Route pubbliche */}
           <Route
             path="/"
             element={
@@ -283,7 +257,6 @@ function App() {
             }
           />
 
-          {/* Route solo per NON loggati */}
           <Route
             path="/login"
             element={
@@ -306,7 +279,6 @@ function App() {
             }
           />
 
-          {/* Route solo per gestori loggati */}
           <Route
             path="/campi/nuovo"
             element={
@@ -318,7 +290,6 @@ function App() {
             }
           />
 
-          {/* Route modifica campo (solo proprietario) */}
           <Route
             path="/campi/:id/modifica"
             element={
@@ -330,7 +301,6 @@ function App() {
             }
           />
 
-          {/* Profilo gestore */}
           <Route
             path="/profilo"
             element={
