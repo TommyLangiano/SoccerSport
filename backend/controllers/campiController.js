@@ -3,6 +3,8 @@
 
 const Campo = require('../models/Campo');
 
+const DEFAULT_IMAGE = 'https://www.sporteimpianti.it/wp-content/uploads/2022/03/futsal-banner-mast-pero.jpg';
+
 // Ottieni tutti i campi
 exports.getAllCampi = async (req, res) => {
   try {
@@ -58,7 +60,7 @@ exports.createCampo = async (req, res) => {
       citta: citta,
       indirizzo: indirizzo,
       prezzo: prezzo,
-      immagine: immagine,
+      immagine: immagine || DEFAULT_IMAGE,
       gestore: req.user._id
     });
     
@@ -101,7 +103,7 @@ exports.updateCampo = async (req, res) => {
     campoTrovato.citta = citta || campoTrovato.citta;
     campoTrovato.indirizzo = indirizzo || campoTrovato.indirizzo;
     campoTrovato.prezzo = prezzo || campoTrovato.prezzo;
-    campoTrovato.immagine = immagine || campoTrovato.immagine;
+    campoTrovato.immagine = immagine || campoTrovato.immagine || DEFAULT_IMAGE;
     
     const campoAggiornato = await campoTrovato.save();
     const campoPopolato = await Campo.findById(campoAggiornato._id)
