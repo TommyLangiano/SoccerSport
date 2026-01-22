@@ -11,6 +11,7 @@ function CampoDetail({ currentUser, onLikeCampo, onDeleteCampo }) {
 
   useEffect(() => {
     loadCampo();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   const loadCampo = async () => {

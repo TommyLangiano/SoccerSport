@@ -16,4 +16,10 @@ router.post('/login', authController.login);
 // GET /api/auth/me - Ottieni dati utente loggato (protetta)
 router.get('/me', protect, authController.getMe);
 
+// POST /api/auth/refresh - Rinnova access token usando refresh token
+router.post('/refresh', authController.refresh);
+
+// POST /api/auth/logout - Logout (rimuove refresh token dal database)
+router.post('/logout', authController.logout);
+
 module.exports = router;

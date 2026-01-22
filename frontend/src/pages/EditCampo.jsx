@@ -18,6 +18,7 @@ function EditCampo({ onUpdateCampo }) {
 
     useEffect(() => {
         loadCampo();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id]);
 
     const loadCampo = async () => {

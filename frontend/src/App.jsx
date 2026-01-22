@@ -23,8 +23,6 @@ const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 function App() {
   // Hook useState per gestire lo stato dell'utente loggato
   const [currentUser, setCurrentUser] = useState(null);
-  // Stato per la lista dei campi
-  const [campi, setCampi] = useState([]);
   // Stato per loading
   const [loading, setLoading] = useState(true);
 
@@ -49,32 +47,6 @@ function App() {
     loadInitialData();
   }, []); // Array di dipendenze vuoto: esegui solo al mount
 
-  // Funzione per caricare tutti i campi
-  const loadCampi = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      const headers = {
-        "Content-Type": "application/json",
-      };
-      if (token) {
-        headers["Authorization"] = `Bearer ${token}`;
-      }
-
-      const response = await fetch(`${API_BASE_URL}/campi`, { headers });
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(
-          data?.message || `Errore caricamento campi: ${response.status}`,
-        );
-      }
-
-      setCampi(data.campi || []);
-    } catch (error) {
-      console.error("Errore caricamento campi:", error);
-    }
-  };
-
   // Login
   const handleLogin = async (credentials) => {
     try {
@@ -91,6 +63,7 @@ function App() {
 
       if (data?.token) {
         localStorage.setItem("token", data.token);
+        localStorage.setItem("refreshToken", data.refreshToken);
         localStorage.setItem("user", JSON.stringify(data.user));
         setCurrentUser(data.user);
         return { success: true };
@@ -119,6 +92,7 @@ function App() {
 
       if (data?.token) {
         localStorage.setItem("token", data.token);
+        localStorage.setItem("refreshToken", data.refreshToken);
         localStorage.setItem("user", JSON.stringify(data.user));
         setCurrentUser(data.user);
         return { success: true };
@@ -129,16 +103,67 @@ function App() {
     }
   };
 
+  // Refresh token - rinnova access token
+  const handleRefreshToken = async () => {
+    try {
+      const refreshToken = localStorage.getItem("refreshToken");
+
+      if (!refreshToken) {
+        handleLogout();
+        return false;
+      }
+
+      const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ refreshToken }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        localStorage.setItem("token", data.token);
+        // Aggiorna anche il refresh token se ruotato
+        if (data.refreshToken) {
+          localStorage.setItem("refreshToken", data.refreshToken);
+        }
+        return true;
+      }
+
+      // Se refresh fallisce, fai logout
+      handleLogout();
+      return false;
+    } catch (error) {
+      handleLogout();
+      return false;
+    }
+  };
+
   // Logout
   const handleLogout = async (callApi = true) => {
+    const refreshToken = localStorage.getItem("refreshToken");
+
+    // Chiama API logout per rimuovere refresh token dal DB
+    if (callApi && refreshToken) {
+      try {
+        await fetch(`${API_BASE_URL}/auth/logout`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ refreshToken }),
+        });
+      } catch (error) {
+        // Ignora errori del logout
+      }
+    }
+
     localStorage.removeItem("token");
+    localStorage.removeItem("refreshToken");
     localStorage.removeItem("user");
     setCurrentUser(null);
   };
 
   // Crea nuovo campo (solo gestore)
-  const handleCampoCreated = (newCampo) => {
-    setCampi((prevCampi) => [newCampo, ...prevCampi]);
+  const handleCampoCreated = () => {
+    // Il campo verrà mostrato quando l'utente torna alla home
   };
 
   // Elimina campo (solo proprietario)
@@ -159,9 +184,6 @@ function App() {
         );
       }
 
-      setCampi((prevCampi) =>
-        prevCampi.filter((campo) => campo._id !== campoId),
-      );
       return { success: true };
     } catch (error) {
       console.error("Errore eliminazione campo:", error);
@@ -202,16 +224,21 @@ function App() {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
       });
+
+      // Se token scaduto (401), prova a fare refresh
+      if (response.status === 401) {
+        const refreshed = await handleRefreshToken();
+        if (refreshed) {
+          // Riprova la chiamata con nuovo token
+          return handleLikeCampo(campoId);
+        }
+        return { success: false, message: "Sessione scaduta" };
+      }
+
       const data = await response.json();
 
       if (!response.ok) {
         throw new Error(data?.message || `Errore like: ${response.status}`);
-      }
-
-      if (data?.campo) {
-        setCampi((prevCampi) =>
-          prevCampi.map((c) => (c._id === data.campo._id ? data.campo : c)),
-        );
       }
 
       return { success: true, data };
@@ -238,7 +265,12 @@ function App() {
 
         <Routes>
           {/* Route pubbliche */}
-          <Route path="/" element={<Home />} />
+          <Route
+            path="/"
+            element={
+              <Home currentUser={currentUser} onLikeCampo={handleLikeCampo} />
+            }
+          />
 
           <Route
             path="/campi/:id"

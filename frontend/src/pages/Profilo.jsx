@@ -12,6 +12,7 @@ function Profilo({ currentUser, onLikeCampo }) {
     if (currentUser) {
       loadMieiCampi();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser]);
 
   const loadMieiCampi = async () => {

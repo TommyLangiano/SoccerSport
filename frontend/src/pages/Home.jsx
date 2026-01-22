@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import CampoCard from '../components/CampoCard.jsx';
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
-function Home() {
+function Home({ currentUser, onLikeCampo }) {
     const [campi, setCampi] = useState([]);
     const [cittaFiltro, setCittaFiltro] = useState('');
     const [loading, setLoading] = useState(true);
@@ -24,6 +23,17 @@ function Home() {
             console.error("Errore caricamento campi:", error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleLikeInHome = async (campoId) => {
+        if (!currentUser) {
+            alert('Effettua il login per mettere like');
+            return;
+        }
+        const result = await onLikeCampo(campoId);
+        if (result.success) {
+            loadCampi();
         }
     };
 
@@ -68,10 +78,10 @@ function Home() {
                 <div className="row g-4">
                     {campiFiltrati.map(campo => (
                         <div key={campo._id} className="col-md-4">
-                            <CampoCard 
+                            <CampoCard
                                 campo={campo}
-                                currentUser={null}
-                                onLikeCampo={() => alert('Effettua il login per mettere like')}
+                                currentUser={currentUser}
+                                onLikeCampo={handleLikeInHome}
                             />
                         </div>
                     ))}

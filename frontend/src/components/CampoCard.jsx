@@ -22,7 +22,7 @@ function CampoCard({ campo, currentUser, onLikeCampo }) {
                 alt={campo.nome}
                 style={{ height: '200px', objectFit: 'cover' }}
                 onError={(e) => {
-                    e.target.src = 'https://picsum.photos/400/300';
+                    e.target.src = 'https://placehold.co/400x300/4CAF50/white?text=Campo+Calcio';
                 }}
             />
             <div className="card-body d-flex flex-column">
